@@ -1,0 +1,58 @@
+# =========================================================
+#  .gitignore para projetos Unity
+#  (o que NÃO precisa ir para o GitHub: arquivos gerados)
+# =========================================================
+
+# Pastas geradas pelo Unity (recriadas ao abrir o projeto)
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]serSettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+
+# Arquivos de projeto das IDEs (o Unity recria)
+.vs/
+.idea/
+.vscode/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.VC.opendb
+
+# Arquivos .meta gerados junto com os de cima
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# Relatórios de crash do Unity
+sysinfo.txt
+crashlytics-build.properties
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Arquivos de build / pacotes (não são fonte)
+*.apk
+*.aab
+*.unitypackage
+*.app
+*.exe
+*.log
+ExportedObj/
+*.zip
