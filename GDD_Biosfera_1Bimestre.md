@@ -1,333 +1,210 @@
-================================================================================
-                GDD - GAME DESIGN DOCUMENT  |  1º BIMESTRE
-                       BIOSFERA - A JORNADA DA RESTAURAÇÃO
-================================================================================
+# Biosfera — A Jornada da Restauração
 
-  Motor:          Unity 6000.0.8f1 (versão exata do Laboratório 12)
-  Render Pipeline: Built-in (shader "Standard"). O código detecta
-                   automaticamente a URP e usa "Universal Render Pipeline/Lit"
-                   caso ela esteja ativa - por isso o jogo nunca fica sem
-                   material nem quebra por causa de pacote de pipeline.
-  Modo:           3D, Terceira Pessoa
-  Tema:           ECORRENOVAÇÃO
-  Plataforma:     PC / Windows
-  Equipe:         (preencher nome do grupo)
+**Game Design Document — 1º Bimestre**
 
-  IMPORTANTE: este GDD descreve SOMENTE o que foi ENTREGUE no 1º bimestre.
-  Os números abaixo foram conferidos diretamente no código.
+- Engine: Unity 6000.0.8f1 (a versão exata que usamos no laboratório)
+- Pipeline de renderização: Built-in (shader "Standard")
+- Estilo: 3D, terceira pessoa
+- Tema: Ecorrenovação
+- Plataforma: PC / Windows
+- Autor: Rafael Rocha (trabalho individual)
 
-================================================================================
-1. VISÃO GERAL (CONCEITO ORIGINAL - NÃO É DA INTERNET)
-================================================================================
+> Este documento descreve só o que eu realmente entreguei neste bimestre.
+> Todos os números que aparecem aqui eu fui conferindo no próprio código enquanto testava o jogo.
 
-"BIOSFERA - A Jornada da Restauração" é um jogo 3D de ação e aventura em
-terceira pessoa. O jogador controla S.E.E.D., um pequeno robô de tecnologia
-verde enviado à "Floresta das Cinzas", uma região devastada por incêndio e
-poluição.
+---
 
-Por ser um robô (e não um humano), o S.E.E.D. não usa ferramentas: ele
-TRANSPORTA sementes no próprio corpo e as libera ao entrar nas Zonas de
-Restauração. Cada semente liberada faz nascer vegetação real no terreno,
-pintando o disco da zona de verde em tempo real. Enquanto isso, robôs
-poluentes continuam soltando fumaça tóxica e precisam ser neutralizados.
+## 1. A ideia do jogo
 
-  Missão da fase entregue (Nível 1):
-    - Coletar SEMENTES brilhantes espalhadas pelo mapa.
-    - Levar as sementes até as ZONAS DE RESTAURAÇÃO (plantio automático).
-    - Plantar 5 sementes para restaurar a floresta  -> VITÓRIA.
-    - Neutralizar robôs poluentes pulando na cabeça deles.
-    - Concluir tudo antes de o cronômetro de 4:00 (240 s) zerar.
+A ideia nasceu de uma pergunta simples: e se, em vez de um herói humano, quem consertasse o mundo fosse um robô? No jogo você controla o **S.E.E.D.**, um pequeno robô de tecnologia verde que foi mandado para a "Floresta das Cinzas", uma área que queimou e ficou coberta de poluição. A missão dele é trazer a floresta de volta.
 
-================================================================================
-2. TEMA ECORRENOVAÇÃO (8 ELEMENTOS - o mínimo exigido é 5)
-================================================================================
+O detalhe que eu mais gostei de fazer é que o S.E.E.D. **não tem mãos nem ferramentas**. Como ele é um robô, a semente fica guardada dentro do próprio corpo dele e é liberada quando ele entra nas Zonas de Restauração. A cada semente liberada, nasce vegetação de verdade no chão e o pedaço de terra que estava morto vai ficando verde na frente do jogador. Isso dá uma sensação de progresso bem concreta: você literalmente vê a floresta voltando.
 
-  1. SEMENTES - esferas verdes emissivas que flutuam, giram e pulsam brilho.
-     Representam a esperança da regeneração.
-  2. ZONAS DE RESTAURAÇÃO - discos marrons com coluna de luz verde. Conforme
-     a semente é plantada, o disco muda de marrom (terra morta) para verde
-     (vegetação) por interpolação de cor.
-  3. VEGETAÇÃO GERADA POR RESTAURAÇÃO - a cada semente plantada nasce uma
-     árvore pequena aleatória dentro da zona (Instantiate a partir de um vetor
-     de prefabs GameObject[]).
-  4. ROBÔS POLUENTES - inimigos com uma esfera vermelha (olho) que emitem
-     FUMAÇA TÓXICA contínua (ParticleSystem em loop).
-  5. EXPLOSÃO AO NEUTRALIZAR - ao ser pisado, o poluente explode em partículas
-     de explosão + detritos (pedrinhas) e gira no ar por torque.
-  6. DETRITOS / LIXO - latas e entulho espalhados pelo cenário devastado.
-  7. COGUMELOS E FLORES - indicam o ambiente que pode voltar a viver.
-  8. TUFOS DE CAPIM - preenchem o terreno e são a categoria mais numerosa.
+Enquanto isso, robôs poluentes ficam soltando fumaça tóxica pelo mapa e atrapalham o trabalho.
 
-================================================================================
-3. GAMEPLAY
-================================================================================
+**A missão do nível que entreguei:**
 
-3.1 CONTROLES
-  W A S D / Setas         Movimentar o robô S.E.E.D.
-  SHIFT (segurar)         Correr
-  ESPAÇO                  Pular
-  MOUSE                   Girar a câmera em volta do robô (3ª pessoa)
-  P  /  ESC  / botão      Pausar e continuar
-  BOTÃO REINICIAR         Reinicia a fase (presente na Pausa, Vitória e Derrota)
+- Andar pelo mapa e coletar as sementes brilhantes.
+- Levar essas sementes até as Zonas de Restauração (o plantio acontece sozinho).
+- Plantar 5 sementes para restaurar a floresta e vencer.
+- Tome cuidado com os robôs poluentes: eles machucam, e se você perder as três vidas o S.E.E.D. é desativado.
+- Fazer tudo isso antes do cronômetro de 4:00 zerar.
 
-3.2 LOOP PRINCIPAL
-  a) O robô nasce no centro do mapa.
-  b) O HUD mostra: sementes coletadas, sementes plantadas / meta, cronômetro
-     e a dica de controle.
-  c) O jogador percorre o mapa e coleta sementes (colisão em trigger).
-  d) O jogador entra numa Zona de Restauração: o plantio acontece SOZINHO,
-     1 semente a cada ~0,9 s, enquanto houver semente na mão.
-  e) Plantar 5 sementes  ->  tela de VITÓRIA.
-  f) Cronômetro chegar a 0  ->  tela de DERROTA.
-  g) Os poluentes patrulham, PERSEGUEM quando o jogador se aproxima (ficam
-     avermelhados) e ATRAPALHAM: encostar de lado causa dano (-5 s no
-     cronômetro), empurrão (knockback), som de dano e partículas. Pular na
-     cabeça deles os neutraliza e dá um impulso para cima no jogador.
+---
 
-3.3 VALORES CONFIGURADOS (conferidos no código)
-  Tempo da fase .................. 240 s (4:00)
-  Sementes plantadas p/ vencer .... 5
-  Sementes espalhadas no mapa ..... 8
-  Zonas de Restauração ............ 3
-  Inimigos poluentes .............. 4
-  Intervalo de plantio ............ 0,9 s
-  Velocidade andar / correr ....... 5 / 8,5 m por segundo
-  Força do pulo ................... 7 (ForceMode.Impulse)
+## 2. O tema Ecorrenovação
 
-================================================================================
-4. OS 14 ITENS EXIGIDOS - ONDE CADA UM ESTÁ NO PROJETO
-================================================================================
+O trabalho pedia pelo menos 5 elementos do tema. Eu coloquei 8:
 
-  4.1 COLISÃO
-      - Player  -> CapsuleCollider (não-trigger) + Rigidbody  [Bootstrap.cs]
-      - Semente -> SphereCollider isTrigger  [LevelSpawner.BuildSeedTemplate]
-                   coletada em SeedCollector.OnTriggerEnter
-      - Zona    -> SphereCollider isTrigger + RestorationZone.OnTriggerEnter /
-                   OnTriggerStay / OnTriggerExit (detecta o jogador dentro)
-      - Inimigo -> SphereCollider + Rigidbody + PollutionEnemy.OnCollisionEnter
-                   (colisão física: pisa em cima = neutraliza)
-      - Árvores, pedras e lixo -> colliders físicos de verdade
-        (GameObject.CreatePrimitive já vem com collider).
+1. **Sementes** — esferas verdes que brilham, flutuam e giram sozinhas no ar. Elas são a esperança da regeneração.
+2. **Zonas de Restauração** — discos de terra com uma coluna de luz verde no alto. Conforme você planta, o disco vai mudando de marrom (terra morta) para verde (vegetação viva).
+3. **Vegetação que nasce da restauração** — cada semente plantada faz brotar uma arvorezinha aleatória dentro da zona, usando `Instantiate` em cima de um vetor de prefabs.
+4. **Robôs poluentes** — os inimigos, com um "olho" vermelho brilhando e um jato contínuo de fumaça tóxica.
+5. **Explosão ao neutralizar** — quando você pisa em cima de um poluente, ele explode em partículas e pedrinhas e sai girando pelo ar.
+6. **Detritos e lixo** — latas e entulho jogados pelo cenário devastado.
+7. **Cogumelos e flores** — os primeiros sinais de que aquele lugar ainda pode voltar a viver.
+8. **Tufos de capim** — espalhados pelo terreno, são a categoria mais numerosa do cenário.
 
-  4.2 MOVIMENTAÇÃO: TRANSLATE e AddForce
-      - transform.Translate  -> Seed.Update (a semente flutua no ar)
-      - Rigidbody.AddForce   -> PlayerController.FixedUpdate
-                                (movimento horizontal, ForceMode.Acceleration)
-      - Rigidbody.AddForce   -> PlayerController.Jump
-                                (pulo, ForceMode.Impulse)
-      - Rigidbody.AddForce   -> PollutionEnemy.FixedUpdate
-                                (patrulha e perseguição)
+---
 
-  4.3 ROTAÇÃO
-      - transform.Rotate      -> Seed.Update (giro contínuo da semente)
-      - Quaternion.Slerp +
-        Quaternion.LookRotation -> PlayerController.UpdateAnimator (o modelo
-                                   vira para a direção do movimento)
-      - Quaternion.Slerp      -> PollutionEnemy.FixedUpdate (vira para onde anda)
-      - CameraFollow.LateUpdate -> yaw/pitch com o mouse (órbita da câmera)
+## 3. Como se joga
 
-  4.4 TORQUE
-      - Rigidbody.AddTorque(ForceMode.Impulse) -> PollutionEnemy.Neutralize
-        (o poluente gira descontrolado no ar ao ser derrotado).
+### Controles
 
-  4.5 VETOR DE PREFABS (GameObject[])
-      - LevelSpawner possui 8 vetores de categoria + vegetação + semente +
-        inimigo:  treePrefabs, rockPrefabs, bushPrefabs, mushroomPrefabs,
-        flowerPrefabs, grassPrefabs, debrisPrefabs, trashPrefabs,
-        vegetationPrefabs, seedPrefab, enemyPrefab.
-      - RestorationZone.vegetationPrefabs -> GameObject[] usado no plantio.
+| Tecla / Ação | O que faz |
+| --- | --- |
+| W A S D ou setas | Andar com o robô |
+| SHIFT (segurar) | Correr |
+| ESPAÇO | Pular |
+| MOUSE | Girar a câmera em volta do robô |
+| P, ESC ou botão | Pausar e continuar |
+| Botão REINICIAR | Reinicia a fase (tem na Pausa, na Vitória e na Derrota) |
 
-  4.6 SCRIPTS C# (14 arquivos)
-      Em Assets/Scripts/Biosfera/ (13):
-        1.  Bootstrap.cs        8.  Seed.cs
-        2.  BiosferaRunner.cs   9.  PollutionEnemy.cs
-        3.  Factory.cs          10. RestorationZone.cs
-        4.  GameManager.cs      11. CameraFollow.cs
-        5.  AudioManager.cs     12. UIManager.cs
-        6.  LevelSpawner.cs     13. SeedCollector.cs
-        7.  PlayerController.cs
-      Em Assets/Editor/ (1):
-        14. BiosferaEditorSetup.cs  (cria a cena, o AnimatorController com os
-                                     5 estados, o Build Settings e os shaders)
+### O fluxo de uma partida
 
-  4.7 PARTÍCULAS (explosão, fumaça e detritos/pedrinhas)
-      - Factory.ParticleTemplate(...) cria, por código:
-          * explosão do inimigo (FX_ExplosaoInimigo)
-          * detritos/pedrinhas (FX_DetritosInimigo)
-          * plantio da semente (FX_Plantio)
-          * coleta da semente (FX_ColetarSemente)
-      - Factory.Smoke(...) -> fumaça tóxica CONTÍNUA (loop) presa ao inimigo.
-      - Factory.SpawnBurst(...) -> Instantiate + Play + Destroy automático.
+O robô começa no centro do mapa. No HUD fica sempre visível quantas sementes você já pegou, quantas já plantou da meta, e o relógio. Você sai andando, coleta as sementes espalhadas e leva elas para uma das três Zonas de Restauração. Ficar dentro da zona é o suficiente: o plantio é automático, uma semente a cada 0,9 segundo.
 
-  4.8 SOM
-      - AudioManager.cs (Singleton) com 2 AudioSource (música e efeitos).
-      - Todos os clipes são gerados por código (Factory.Tone / Factory.Ambient):
-          Trilha sonora em loop (BGM_Biosfera)
-          SFX: coletar, plantar, neutralizar, pular, vitória, derrota.
-      - Chamados por GameManager, PlayerController e AudioManager.
+Chegando a 5 sementes plantadas, aparece a tela de vitória. Se o tempo acabar antes, aparece a derrota.
 
-  4.9 ANIMAÇÃO COM OS 5 ESTADOS (Idle, Walk, Run, Jump, Fall)
-      - BiosferaEditorSetup.EnsureAnimatorController cria o AnimatorController
-        "SEEED07_Animator" com os 5 estados e os parâmetros
-        Speed (Float), VerticalSpeed (Float) e Grounded (Bool).
-      - PlayerController.UpdateAnimator calcula o estado atual e chama
-        Animator.CrossFade(hash). Além disso, existe uma animação procedural
-        (o modelo "respira"/balança conforme a velocidade), garantindo que o
-        robô NUNCA pareça congelado, mesmo sem clipes importados.
+Os quatro poluentes ficam patrulhando o mapa. Quando você chega perto, eles percebem (ficam avermelhados) e começam a te perseguir. Encostar de lado neles dói: você perde uma das três vidas, perde 5 segundos no relógio, leva um empurrão e o robô pisca de vermelho. Para vencer um poluente, o jeito é pular em cima da cabeça dele — ele explode, e você ganha um impulso para cima.
 
-  4.10 RANDOM PARA ESCOLHER POSIÇÃO (e outros sorteios)
-      - LevelSpawner.RandomGroundPosition usa Random.Range para X e Z dentro
-        da área jogável, respeitando um raio livre no centro (onde o jogador
-        nasce). Também sorteia a rotação Y e a escala de cada asset.
-      - RestorationZone.PlantOne sorteia o prefab do vetor, o ângulo e o raio.
-      - PollutionEnemy sorteia os 4 waypoints de patrulha ao redor do spawn.
-      - Factory.Tone usa UnityEngine.Random para o ruído dos sons.
+### Números que configurei
 
-  4.11 UI COM TEXTO E BOTÃO REINICIAR (obrigatório)
-      - Bootstrap.CreateUserInterface monta tudo por código (UGUI, sem TMP):
-          HUD: Texto de sementes, Texto de tempo, Texto de dica, botão PAUSAR
-          3 painéis (Pausa / Vitória / Derrota), e CADA UM tem
-          BOTÃO REINICIAR + BOTÃO SAIR.
-      - UIManager.cs conecta os cliques: REINICIAR -> GameManager.RestartLevel.
+| Item | Valor |
+| --- | --- |
+| Tempo da fase | 240 s (4:00) |
+| Sementes para vencer | 5 |
+| Sementes espalhadas pelo mapa | 8 |
+| Zonas de Restauração | 3 |
+| Inimigos poluentes | 4 |
+| Intervalo entre plantios | 0,9 s |
+| Velocidade de andar / correr | 5 / 8,5 m por segundo |
+| Força do pulo | 7 (ForceMode.Impulse) |
 
-  4.12 SPAWN DE OBJETOS COM Instantiate
-      - LevelSpawner.SpawnCategory -> Instantiate(prefab, pos, rotação aleatória)
-      - LevelSpawner.SpawnSeeds / SpawnEnemies -> Instantiate
-      - RestorationZone.PlantOne -> Instantiate da vegetação
-      - Factory.SpawnBurst -> Instantiate das partículas
+---
 
-  4.13 TAGS
-      - Configuradas em ProjectSettings/TagManager.asset:
-          Player, Seed, RestorationZone, Enemy, Ground
-      - Aplicadas em tempo de execução por Factory.SetTag (de forma segura).
+## 4. Os 14 itens pedidos no trabalho
 
-  4.14 DOCUMENTAÇÃO XML NO CÓDIGO
-      - Todas as classes e funções têm /// <summary>, /// <param> e
-        /// <returns> quando aplicável, no padrão do C#:
-            /// <summary> O que a função faz. </summary>
-            /// <param name="x"> O que é o argumento. </param>
-            /// <returns> O que ela devolve. </returns>
-      - Exemplos: Bootstrap.Build, PlayerController.CheckGrounded,
-        RestorationZone.PlantOne, Factory.Tone, entre outras.
+O trabalho tinha uma lista de 14 coisas que o projeto precisava ter. Fui anotando onde cada uma ficou no código para facilitar a correção.
 
-================================================================================
-5. NÍVEIS
-================================================================================
+**1. Colisão.** O jogador tem um `CapsuleCollider` de verdade e um `Rigidbody`. A semente usa um `SphereCollider` em modo trigger, e a coleta acontece no `SeedCollector.OnTriggerEnter`. A zona também é um trigger, e o `RestorationZone` usa `OnTriggerEnter`, `OnTriggerStay` e `OnTriggerExit` para saber quando o robô está dentro dela. O inimigo tem colisão física de verdade, por isso dá para pisar em cima dele. Árvores, pedras e lixo também têm colisores normais (os primitivos do Unity já vêm com isso).
 
-  O projeto completo preverá 5 níveis (2º bimestre). No 1º BIMESTRE é
-  entregue SOMENTE o Nível 1 - "Floresta das Cinzas" -, que já contém todas
-  as mecânicas exigidas e ~340 assets instanciados por código.
+**2. Movimentação com Translate e AddForce.** A semente flutua com `transform.Translate` (no `Seed.Update`). O robô anda com `Rigidbody.AddForce` usando `ForceMode.Acceleration`, e o pulo também é `AddForce`, mas com `ForceMode.Impulse`. Os inimigos usam `AddForce` tanto para patrulhar quanto para perseguir.
 
-  Nível 1 - Floresta das Cinzas (entregue)
-    * Terreno plano de 90 m x 90 m, cor de terra queimada.
-    * Área de spawn dos assets: de -34 a +34 (raio livre de 4,5 m no centro).
-    * Assets instanciados por código (Instantiate sobre vetores de prefabs):
-        26 Manchas de cinza | Cerca viva (44 árvores na borda)
-        20 Cogumelos        | 34 Flores
-        78 Tufos de capim   | 34 Detritos
-        14 Lixos            | 44 Pedras/Arbustos em aglomerados
-        27 a 54 Árvores em aglomerados
-        --------------------------
-        + 8 Sementes coletáveis + 4 Inimigos poluentes
-        = ~340 ASSETS (319 a 376, varia a cada partida)
-    * Os assets são gerados em 104 MODELOS DIFERENTES entre si (variação
-      procedural de forma, tamanho e cor) - bem acima do mínimo de 70.
-    * Ainda são criados: 1 chão, 3 zonas de restauração (disco + baliza +
-      luz = 9 objetos), o robô (4 partes de modelo) e a interface completa.
-    * O mínimo exigido pelo professor é 70 assets - o projeto entrega ~340,
-      em 104 MODELOS diferentes.
+**3. Rotação.** A semente gira com `transform.Rotate`. O modelo do robô vira para a direção em que você anda usando `Quaternion.Slerp` + `Quaternion.LookRotation`. Os inimigos também se viram para onde andam. E a câmera gira em órbita com o mouse no `CameraFollow.LateUpdate`.
 
-================================================================================
-5.1 O MUNDO AO REDOR (a fase não fica "no vácuo")
-================================================================================
+**4. Torque.** Quando um poluente é neutralizado, ele leva um `AddTorque` com `ForceMode.Impulse` e sai girando descontrolado no ar.
 
-  Além da área jogável, o Bootstrap monta por código um cenário completo:
-    * Terreno distante de 700 m x 700 m, abaixo do chão jogável;
-    * Floresta de fundo com 150 árvores em anel (raio de 48 a 108 m);
-    * 40 montanhas no horizonte (raio de 170 a 300 m);
-    * Névoa linear (65 m a 320 m) e farClipPlane de 700 m, dando profundidade;
-    * 4 paredes invisíveis (BoxCollider) em ±44,5 m - cerca natural que
-      impede o robô de cair para fora do mapa.
+**5. Vetor de prefabs (`GameObject[]`).** O `LevelSpawner` trabalha com vários vetores: árvores, pedras, arbustos, cogumelos, flores, capim, detritos, lixo, vegetação, semente e inimigo. A `RestorationZone` também tem o vetor dela, usado na hora de plantar.
 
-================================================================================
-5.2 VIDAS DO ROBÔ E MORTE (o dano tem consequência)
-================================================================================
+**6. Scripts em C#.** Ao todo são 14 arquivos: 13 em `Assets/Scripts/Biosfera/` e 1 em `Assets/Editor/`.
 
-  * O robô S.E.E.D. tem 3 VIDAS (GameManager.maxLives), mostradas no HUD
-    ("VIDA: 3 / 3 [##] [##] [##]").
-  * Encostar DE LADO num robô poluente tira 1 VIDA, desconta 5 segundos do
-    cronômetro, aplica knockback, pisca o robô de vermelho e toca som de dano.
-    Há 1 s de invulnerabilidade (hitCooldown) entre dois golpes.
-  * Com as 3 vidas zeradas -> PlayerController.Die(): o modelo é escondido,
-    dispara explosão verde e abre o PAINEL DE DERROTA com o título
-    "S.E.E.D. DESATIVADO". Se o tempo acabar antes, o título é
-    "TEMPO ESGOTADO".
-  * Pular NA CABEÇA do inimigo continua sendo o jeito de neutralizá-lo (e
-    não consome vida).
+- Em `Assets/Scripts/Biosfera/`: `Bootstrap.cs`, `BiosferaRunner.cs`, `Factory.cs`, `GameManager.cs`, `AudioManager.cs`, `LevelSpawner.cs`, `PlayerController.cs`, `Seed.cs`, `PollutionEnemy.cs`, `RestorationZone.cs`, `CameraFollow.cs`, `UIManager.cs` e `SeedCollector.cs`.
+- Em `Assets/Editor/`: `BiosferaEditorSetup.cs`, que cria a cena, o AnimatorController com os 5 estados, o Build Settings e os shaders.
 
-================================================================================
-6. QUALIDADE DOS GRÁFICOS
-================================================================================
+**7. Partículas.** Tudo criado por código na classe `Factory`: a explosão do inimigo, os detritos/pedrinhas, o efeito do plantio e o efeito de coletar a semente. A fumaça tóxica é um `ParticleSystem` em loop preso ao inimigo. O `Factory.SpawnBurst` dispara um efeito com `Instantiate`, toca e se destrói sozinho.
 
-  6.1 Todos os assets são GERADOS PROCEDURALMENTE por código
-      (GameObject.CreatePrimitive: Cube, Sphere, Cylinder, Plane) com
-      materiais coloridos, escala e rotação aleatórias -> variação visual.
-  6.2 Nada é importado da internet: nenhum modelo, textura, som ou partícula
-      veio de fora. Isso garante a ORIGINALIDADE exigida.
-  6.3 Iluminação: luz direcional (Sol) com sombras suaves, luz ambiente
-      Trilight e névoa linear (65 m a 320 m) para dar profundidade - reforçada
-      pelo mundo ao redor (terreno distante, floresta e montanhas).
-  6.4 As Zonas de Restauração têm luz pontual verde e baliza alta, para o
-      jogador localizar o objetivo de longe.
+**8. Som.** O `AudioManager` tem dois `AudioSource`, um para a trilha e outro para os efeitos. Nenhum som foi baixado da internet: todos os clipes são gerados por código com `Factory.Tone` e `Factory.Ambient`. Tem uma música em loop e efeitos para coletar, plantar, neutralizar, pular, vencer e perder.
 
-================================================================================
-7. GAME MECHANIC (MECÂNICA DIFERENCIAL ORIGINAL)
-================================================================================
+**9. Animação com 5 estados.** O `SEEED07_Animator` é montado pelo `BiosferaEditorSetup` com os estados Idle, Walk, Run, Jump e Fall, e os parâmetros `Speed`, `VerticalSpeed` e `Grounded`. O `PlayerController` calcula o estado atual e troca com `Animator.CrossFade`. Além disso eu fiz uma animação procedural (o robô "respira" e balança conforme a velocidade), então ele nunca fica parecendo congelado.
 
-  "TRANSPORTE E LIBERAÇÃO (o robô não planta, ele libera)"
-  - Diferente de jogos onde se clica para plantar, aqui o robô é um
-    CONTÊINER: as sementes ficam guardadas nele e são liberadas
-    automaticamente enquanto ele permanece sobre a Zona de Restauração.
-    Isso cria uma decisão tática: ficar parado na zona é seguro mas consome
-    tempo; andar pelo mapa é mais rápido, porém expõe você aos poluentes.
-  - Por ser um robô de metal, o inimigo só pode ser vencido POR CIMA
-    (pular na cabeça). Bater DE LADO tira 1 VIDA e empurra você (knockback),
-    o que reforça a mecânica de plataforma em um jogo 3D.
+**10. Posição aleatória.** O `LevelSpawner.RandomGroundPosition` sorteia a posição X e Z de cada asset dentro da área jogável, sempre respeitando um espaço livre no centro onde o robô nasce. Também são sorteadas a rotação e a escala. A zona sorteia qual prefab usar, e os inimigos sorteiam seus pontos de patrulha.
 
-================================================================================
-8. PARTICIPAÇÃO DO GRUPO
-================================================================================
+**11. UI com texto e botão REINICIAR.** Toda a interface é montada por código pelo `Bootstrap`, usando o UGUI comum (Text e Button, sem TextMeshPro). Tem o HUD com o texto das sementes, o texto do tempo e a dica de controle, mais três painéis (Pausa, Vitória e Derrota) — e cada painel tem o botão REINICIAR e um botão de sair. Os cliques são ligados no `UIManager`.
 
-  (PREENCHER PELO GRUPO)
-    Nome 1: ______% (ex.: jogabilidade / scripts)
-    Nome 2: ______% (ex.: UI / level design)
-    Nome 3: ______% (ex.: som / partículas / GDD)
-  TOTAL: 100%
+**12. Spawn com Instantiate.** Usado em vários lugares: ao espalhar as categorias do cenário, ao criar as sementes e inimigos, ao plantar a vegetação na zona e ao disparar as partículas.
 
-================================================================================
-9. CHECKLIST DE ENTREGA (1º BIMESTRE)
-================================================================================
+**13. Tags.** Configurei as cinco tags no `TagManager.asset`: `Player`, `Seed`, `RestorationZone`, `Enemy` e `Ground`. Elas são aplicadas em tempo de execução pela `Factory.SetTag`, de um jeito seguro para não quebrar se a tag não existir.
 
-  [x] Tema Ecorrenovação com mais de 5 elementos (8 entregues)
-  [x] Todos os 14 itens dos tutoriais implementados e documentados
-  [x] Nível 1 com mais de 70 assets diferentes -> 104 MODELOS distintos
-      (~340 assets instanciados no total)
-  [x] GDD detalhado (este documento)
-  [x] Documentação XML em todas as funções dos scripts
-  [x] Gameplay funcional (coletar -> plantar -> vencer)
-  [x] Sistema de dano com consequência: 3 vidas e morte do robô
-  [x] Mundo ao redor: terreno distante, floresta de fundo e montanhas
-  [x] Game Mechanic original ("Transporte e Liberação")
-  [x] Partículas: explosão, fumaça e detritos/pedrinhas
-  [x] Som: trilha sonora + efeitos, tudo gerado por código
-  [x] Animação com os 5 estados (Idle, Walk, Run, Jump, Fall)
-  [x] UI com TEXTO e BOTÃO REINICIAR obrigatório
-  [x] Movimentação com Translate e AddForce
-  [x] Rotação e Torque com Rigidbody
-  [x] Vetores de prefabs (GameObject[]) e Random de posição
-  [x] Tags obrigatórias configuradas
-  [x] Rodar sem erro nenhum: apenas abrir o Unity e apertar Play
+**14. Documentação XML.** Todas as classes e funções estão comentadas no padrão do C#, com `/// <summary>`, `/// <param>` e `/// <returns>` quando faz sentido.
 
-================================================================================
-FIM DO GDD - 1º BIMESTRE
-================================================================================
+---
+
+## 5. O nível que entreguei
+
+Neste bimestre eu entreguei **só o Nível 1**, chamado "Floresta das Cinzas". Os outros níveis ficam para o segundo bimestre. Mesmo sendo um só, ele já tem todas as mecânicas pedidas.
+
+O chão é um plano de 90 x 90 metros, com cor de terra queimada. Os assets são espalhados numa área de -34 a +34 metros, deixando um espaço livre no centro para o robô nascer.
+
+No total, o jogo cria por código cerca de **340 objetos** (esse número varia um pouco a cada partida, porque algumas coisas são sorteadas). São manchas de cinza, a cerca de árvores na borda, cogumelos, flores, tufos de capim, detritos, lixo, pedras, arbustos e árvores em aglomerados, além das 8 sementes e dos 4 inimigos.
+
+O que me deixou mais satisfeito foi ter resolvido o pedido de "70 assets **diferentes**". Como eu gero tudo por código, eu poderia acabar fazendo 340 cópias do mesmo modelo, e isso não valeria. Então criei uma variação procedural: a cor sai de uma conversão de matiz/saturação/brilho (`Hsv`) e o formato e o tamanho saem de um valor estável por índice (`Noise01`). O resultado é que cada modelo tem forma, tamanho e cor próprios e nunca é igual ao outro. No total, saem **104 modelos distintos**, bem acima dos 70 exigidos.
+
+Além dos assets, ainda são criados o chão, as 3 zonas de restauração, o robô e a interface inteira.
+
+---
+
+## 6. O mundo ao redor
+
+Um dos problemas que eu tive no começo foi que a fase parecia estar flutuando no vazio, sem nada em volta. Para resolver, eu montei um cenário de verdade ao redor da área jogável:
+
+- Um terreno distante de 700 x 700 metros, bem abaixo de tudo, para não aparecer o "fim do mundo".
+- Uma floresta de fundo com 150 árvores em anel, entre 48 e 108 metros de distância.
+- 40 montanhas lá no horizonte, entre 170 e 300 metros.
+- Névoa linear (de 65 a 320 metros) e o alcance da câmera em 700 metros, o que dá aquela sensação de profundidade.
+- Quatro paredes invisíveis no limite do mapa, para o robô não cair para fora.
+
+Assim o cenário tem horizonte, profundidade e uma "cerca natural" em volta.
+
+---
+
+## 7. Vidas do robô e dano
+
+No começo o inimigo dava dano mas nada acontecia de verdade — você podia ser atropelado à vontade. Eu arrumei isso colocando um sistema de vidas.
+
+O S.E.E.D. tem **3 vidas**, mostradas no HUD (tipo `VIDA: 3 / 3 [##] [##] [##]`). Cada vez que um poluente encosta de lado em você, perde-se 1 vida, o relógio cai 5 segundos, você leva um empurrão e o robô pisca de vermelho. Existe 1 segundo de invulnerabilidade entre dois golpes, para dois inimigos juntos não tirarem tudo de uma vez.
+
+Se as três vidas acabarem, o robô é desativado (explosão verde) e aparece o painel de derrota com o título **"S.E.E.D. DESATIVADO"**. Se o tempo acabar antes, o título é **"TEMPO ESGOTADO"**. E pular na cabeça do inimigo continua sendo o jeito de derrotá-lo, sem gastar vida.
+
+---
+
+## 8. A mecânica que deixa o jogo diferente
+
+A mecânica principal do jogo é o **"transporte e liberação"**. Em muitos jogos você clica para plantar; aqui não. O robô é um contêiner: ele carrega as sementes no corpo e as libera sozinho enquanto permanece em cima da Zona de Restauração.
+
+Isso cria uma decisão tática de verdade: ficar paradinho na zona é seguro, mas consome tempo; sair correndo pelo mapa é mais rápido, só que te expõe aos poluentes. E como o inimigo é de metal, ele só é derrotado por cima — bater de lado só te machuca e te empurra. Isso reforça o lado de plataforma em um jogo 3D.
+
+---
+
+## 9. Como o jogo foi feito por dentro
+
+**Gráficos.** Todo asset é gerado proceduralmente, usando os primitivos do Unity (`CreatePrimitive` com Cube, Sphere, Cylinder e Plane), com materiais coloridos e escala e rotação sorteadas.
+
+**Originalidade.** Nada aqui veio da internet: nenhum modelo, textura, som ou partícula foi baixado. Tudo é criado em tempo de execução por código, o que garante que o jogo é original.
+
+**Iluminação.** Usei uma luz direcional (o "sol") com sombras suaves, luz ambiente do tipo Trilight e a névoa para dar profundidade, que é reforçada pelo mundo ao redor que descrevi acima.
+
+**Um detalhe que ajuda o jogador.** As Zonas de Restauração têm uma luz verde no alto e uma baliza, então dá para enxergar de longe para onde você precisa levar as sementes.
+
+**O jeito "zero-clique".** Praticamente não existe nada montado à mão na cena do jogo. A cena `Level1` está quase vazia de propósito: tudo é construído por código quando você aperta Play. Isso evita aquele erro chato de "Missing (Mono Script)" e garante que o projeto roda em qualquer máquina, sem eu precisar arrastar nada.
+
+---
+
+## 10. Participação
+
+Este trabalho foi feito **individualmente**.
+
+- Rafael Rocha — 100% (ideia, programação, level design, UI, som, partículas e este GDD)
+
+---
+
+## 11. Checklist de entrega
+
+- [x] Tema Ecorrenovação com mais de 5 elementos (entreguei 8)
+- [x] Os 14 itens pedidos no trabalho, todos implementados e documentados
+- [x] Nível 1 com mais de 70 assets diferentes (entreguei 104 modelos distintos e cerca de 340 objetos no total)
+- [x] GDD detalhado (este documento)
+- [x] Documentação XML nas funções dos scripts
+- [x] Gameplay funcional (coletar, plantar e vencer)
+- [x] Sistema de dano com consequência: 3 vidas e a morte do robô
+- [x] Mundo ao redor: terreno distante, floresta de fundo e montanhas
+- [x] Mecânica original ("transporte e liberação")
+- [x] Partículas: explosão, fumaça e detritos/pedrinhas
+- [x] Som: trilha sonora e efeitos, tudo gerado por código
+- [x] Animação com os 5 estados (Idle, Walk, Run, Jump, Fall)
+- [x] UI com texto e o botão REINICIAR obrigatório
+- [x] Movimentação com Translate e AddForce
+- [x] Rotação e torque com Rigidbody
+- [x] Vetores de prefabs (`GameObject[]`) e posição aleatória
+- [x] Tags obrigatórias configuradas
+- [x] Roda sem erro nenhum: é só abrir o Unity e apertar Play
